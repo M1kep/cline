@@ -1177,12 +1177,6 @@ export class Cline {
 						}
 
 						if (block.partial) {
-							const partialMessage = JSON.stringify({
-								tool: "replaceString",
-								path: getReadablePath(cwd, relPath),
-								content: block.params.new_str
-							} satisfies ClineSayTool)
-							await this.say("text", partialMessage, undefined, block.partial)
 							break;
 						}
 
