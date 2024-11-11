@@ -18,6 +18,7 @@ export const toolUseNames = [
 	"browser_action",
 	"ask_followup_question",
 	"attempt_completion",
+	"replace_string",
 ] as const
 
 // Converts array of tool call names into a union type ("execute_command" | "read_file" | ...)
@@ -36,6 +37,8 @@ export const toolParamNames = [
 	"text",
 	"question",
 	"result",
+	"old_str",
+	"new_str",
 ] as const
 
 export type ToolParamName = (typeof toolParamNames)[number]
@@ -62,6 +65,11 @@ export interface ReadFileToolUse extends ToolUse {
 export interface WriteToFileToolUse extends ToolUse {
 	name: "write_to_file"
 	params: Partial<Pick<Record<ToolParamName, string>, "path" | "content">>
+}
+
+export interface ReplaceStringToolUse extends ToolUse {
+	name: "replace_string"
+	params: Partial<Pick<Record<ToolParamName, string>, "path" | "old_str" | "new_str">>
 }
 
 export interface SearchFilesToolUse extends ToolUse {

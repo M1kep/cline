@@ -1156,6 +1156,51 @@ export class Cline {
 							break
 						}
 					}
+					case "replace_string": {
+						const oldStr: string | undefined = block.params.old_str;
+						const newStr: string | undefined = block.params.new_str;
+
+						const relPath: string | undefined = block.params.path
+						if (!relPath || !oldStr) {
+							// checking for oldStr ensure relPath is complete
+							// wait so we can determine if it's a new file or editing an existing file
+							break
+						}
+						// Check if file exists using cached map or fs.access
+						let fileExists: boolean
+						if (this.diffViewProvider.editType !== undefined) {
+							fileExists = this.diffViewProvider.editType === "modify"
+						} else {
+							const absolutePath = path.resolve(cwd, relPath)
+							fileExists = await fileExistsAtPath(absolutePath)
+							this.diffViewProvider.editType = fileExists ? "modify" : "create"
+						}
+
+						if (block.partial) {
+							const partialMessage = JSON.stringify({
+								tool: "replaceString",
+								path: getReadablePath(cwd, relPath),
+								content: block.params.new_str
+							} satisfies ClineSayTool)
+							await this.say("text", partialMessage, undefined, block.partial)
+							break;
+						}
+
+						if (!newStr) {
+							this.consecutiveMistakeCount++;
+							pushToolResult(await this.sayAndCreateMissingParamError("replace_string", "path/old_str/new_str"));
+							break;
+						}
+			
+						try {
+							console.log(block)
+							await this.diffViewProvider.replaceStringInFile(relPath, oldStr, newStr);
+							pushToolResult(`Replaced "${oldStr}" with "${newStr}" in ${relPath}.`);
+						} catch (error) {
+							await handleError("replacing string in file", error);
+						}
+						break;
+					}
 					case "read_file": {
 						const relPath: string | undefined = block.params.path
 						const sharedMessageProps: ClineSayTool = {

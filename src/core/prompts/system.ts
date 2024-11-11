@@ -64,6 +64,22 @@ Your file content here
 </content>
 </write_to_file>
 
+## replace_string
+Notes for using the \`replace_string\` command:
+* The \`old_str\` parameter should match EXACTLY one or more consecutive lines from the original file. Be mindful of whitespaces!
+* If the \`old_str\` parameter is not unique in the file, the replacement will not be performed. Make sure to include enough context in \`old_str\` to make it unique
+* The \`new_str\` parameter should contain the edited lines that should replace the \`old_str\`
+Parameters:
+- path: (required) The path of the file to write to (relative to the current working directory ${cwd.toPosix()})
+- old_str: (required) The string to be replaced.
+- new_str: (required) The new string to replace the old string.
+Usage:
+<replace_string>
+<path>File path here</path>
+<old_str>Old string here</old_str>
+<new_str>New string here</new_str>
+</replace_string>
+
 ## search_files
 Description: Request to perform a regex search across files in a specified directory, providing context-rich results. This tool searches for patterns or specific content across multiple files, displaying each match with encapsulating context.
 Parameters:
