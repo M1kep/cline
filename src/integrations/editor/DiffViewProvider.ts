@@ -26,19 +26,21 @@ export class DiffViewProvider {
 
 	constructor(private cwd: string) {}
 
-	async replaceStringInFile(relPath: string, oldStr: string, newStr: string): Promise<void> {
-		const fileExists = this.editType === "modify"
-		const absolutePath = path.resolve(this.cwd, relPath)
-        const document = await vscode.workspace.openTextDocument(absolutePath);
-        const text = document.getText();
-        const updatedText = text.split(oldStr).join(newStr);
-
-        const edit = new vscode.WorkspaceEdit();
-        edit.replace(document.uri, new vscode.Range(0, 0, document.lineCount, 0), updatedText);
-
-        await vscode.workspace.applyEdit(edit);
-        await document.save();
-    }
+	async replaceString(oldStr: string, newStr: string): Promise<string> {
+		if (!this.relPath || !this.activeDiffEditor) {
+			throw new Error("No file path set");
+		}
+	
+		this.editType = "modify";
+	
+		const document = this.activeDiffEditor.document;
+		const text = document.getText();
+		const updatedText = text.split(oldStr).join(newStr);
+	
+		await this.update(updatedText, true);
+	
+		return updatedText;
+	}
 
 	async open(relPath: string): Promise<void> {
 		this.relPath = relPath

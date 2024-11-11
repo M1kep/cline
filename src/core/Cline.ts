@@ -1186,13 +1186,39 @@ export class Cline {
 							break;
 						}
 			
+						// We have a full block, now let's create the diff and ask for approval
+						const sharedMessageProps: ClineSayTool = {
+							tool: fileExists ? "editedExistingFile" : "newFileCreated",
+							path: getReadablePath(cwd, relPath),
+						}
 						try {
-							console.log(block)
-							await this.diffViewProvider.replaceStringInFile(relPath, oldStr, newStr);
-							pushToolResult(`Replaced "${oldStr}" with "${newStr}" in ${relPath}.`);
+							await this.diffViewProvider.open(relPath);
+							const newContent = await this.diffViewProvider.replaceString(oldStr, newStr);
+							await delay(300); // wait for diff view to update
+							this.diffViewProvider.scrollToFirstDiff();
+							const completeMessage = JSON.stringify({
+								...sharedMessageProps,
+								content: fileExists ? undefined : newContent,
+								diff: fileExists
+									? formatResponse.createPrettyPatch(
+											relPath,
+										this.diffViewProvider.originalContent,
+										newContent
+									)
+									: undefined,
+							} satisfies ClineSayTool)
+							const didApprove = await askApproval("tool", completeMessage)
+							if (!didApprove) {
+								await this.diffViewProvider.revertChanges()
+								break
+							}
+							const { newProblemsMessage, userEdits, finalContent } =
+								await this.diffViewProvider.saveChanges()
+							pushToolResult(`The \`old_str\` was successfully replaced with the \`new_str\` in the file ${relPath.toPosix()}.${newProblemsMessage}`)
 						} catch (error) {
 							await handleError("replacing string in file", error);
 						}
+						await this.diffViewProvider.reset();
 						break;
 					}
 					case "read_file": {
